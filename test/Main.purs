@@ -1,17 +1,19 @@
 module Test.Main where
 
-import Effect (Effect)
+import Data.Argonaut (JsonDecodeError(..))
 import Data.Argonaut.Aeson.Decode.Generic (genericDecodeAeson, class DecodeAeson)
 import Data.Argonaut.Aeson.Encode.Generic (genericEncodeAeson, class EncodeAeson)
 import Data.Argonaut.Aeson.Options (Options(..), SumEncoding(..), defaultOptions)
+import Data.Argonaut.Core (stringify)
 import Data.Argonaut.Decode.Class (class DecodeJson)
 import Data.Argonaut.Encode.Class (class EncodeJson)
-import Data.Argonaut.Core (stringify)
 import Data.Argonaut.Parser (jsonParser)
+import Data.Bifunctor (lmap)
 import Data.Either (Either(..))
 import Data.Foldable (traverse_)
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
+import Effect (Effect)
 import Prelude (class Eq, class Show, Unit, discard, show, map, ($), (<>), (<<<), (<=<))
 import Test.Unit (suite, test, TestSuite)
 import Test.Unit.Assert as Assert
@@ -93,7 +95,7 @@ derive instance generic_Nested :: Generic (Nested a) _
 instance show_Nested :: Show a => Show (Nested a) where show = genericShow
 derive instance eq_Nested :: Eq a => Eq (Nested a)
 instance decodeJsonNested :: DecodeJson a => DecodeJson (Nested a) where
-  decodeJson a = genericDecodeAeson defaultOptions a
+  decodeJson a = lmap TypeMismatch $ genericDecodeAeson defaultOptions a
 instance encodeJsonNested :: EncodeJson a => EncodeJson (Nested a) where
   encodeJson a = genericEncodeAeson defaultOptions a
 
@@ -102,7 +104,7 @@ derive instance generic_Siblings :: Generic (Siblings a b) _
 instance show_Siblings :: (Show a, Show b) => Show (Siblings a b) where show = genericShow
 derive instance eq_Siblings :: (Eq a, Eq b) => Eq (Siblings a b)
 instance decodeJsonSiblings :: (DecodeJson a, DecodeJson b) => DecodeJson (Siblings a b) where
-  decodeJson a = genericDecodeAeson defaultOptions a
+  decodeJson a = lmap TypeMismatch $ genericDecodeAeson defaultOptions a
 instance encodeJsonSiblings :: (EncodeJson a, EncodeJson b) => EncodeJson (Siblings a b) where
   encodeJson a = genericEncodeAeson defaultOptions a
 
@@ -111,7 +113,7 @@ derive instance generic_Trinity :: Generic (Trinity a b c) _
 instance show_Trinity :: (Show a, Show b, Show c) => Show (Trinity a b c) where show = genericShow
 derive instance eq_Trinity :: (Eq a, Eq b, Eq c) => Eq (Trinity a b c)
 instance decodeJsonTrinity :: (DecodeJson a, DecodeJson b, DecodeJson c) => DecodeJson (Trinity a b c) where
-  decodeJson a = genericDecodeAeson defaultOptions a
+  decodeJson a = lmap TypeMismatch $ genericDecodeAeson defaultOptions a
 instance encodeJsonTrinity :: (EncodeJson a, EncodeJson b, EncodeJson c) => EncodeJson (Trinity a b c) where
   encodeJson a = genericEncodeAeson defaultOptions a
 
@@ -120,7 +122,7 @@ derive instance generic_Inner :: Generic Inner _
 instance show_Inner :: Show Inner where show = genericShow
 derive instance eq_Inner :: Eq Inner
 instance decodeJsonInner :: DecodeJson Inner where
-  decodeJson a = genericDecodeAeson defaultOptions a
+  decodeJson a = lmap TypeMismatch $ genericDecodeAeson defaultOptions a
 instance encodeJsonInner :: EncodeJson Inner where
   encodeJson a = genericEncodeAeson defaultOptions a
 
@@ -129,7 +131,7 @@ derive instance generic_InnerWithTagSingleConstructorsAndNoAllNullaryToStringTag
 instance show_InnerWithTagSingleConstructorsAndNoAllNullaryToStringTag :: Show InnerWithTagSingleConstructorsAndNoAllNullaryToStringTag where show = genericShow
 derive instance eq_InnerWithTagSingleConstructorsAndNoAllNullaryToStringTag :: Eq InnerWithTagSingleConstructorsAndNoAllNullaryToStringTag
 instance decodeJsonInnerWithTagSingleConstructorsAndNoAllNullaryToStringTag :: DecodeJson InnerWithTagSingleConstructorsAndNoAllNullaryToStringTag where
-  decodeJson a = genericDecodeAeson defaultOptionsWithTagSingleConstructorsAndNoAllNullaryToStringTag a
+  decodeJson a = lmap TypeMismatch $ genericDecodeAeson defaultOptionsWithTagSingleConstructorsAndNoAllNullaryToStringTag a
 instance encodeJsonInnerWithTagSingleConstructorsAndNoAllNullaryToStringTag :: EncodeJson InnerWithTagSingleConstructorsAndNoAllNullaryToStringTag where
   encodeJson a = genericEncodeAeson defaultOptionsWithTagSingleConstructorsAndNoAllNullaryToStringTag a
 
@@ -138,7 +140,7 @@ derive instance generic_InnerWithNoAllNullaryToStringTag :: Generic InnerWithNoA
 instance show_InnerWithNoAllNullaryToStringTag :: Show InnerWithNoAllNullaryToStringTag where show = genericShow
 derive instance eq_InnerWithNoAllNullaryToStringTag :: Eq InnerWithNoAllNullaryToStringTag
 instance decodeJsonInnerWithNoAllNullaryToStringTag :: DecodeJson InnerWithNoAllNullaryToStringTag where
-  decodeJson a = genericDecodeAeson defaultOptionsWithNoAllNullaryToStringTag a
+  decodeJson a = lmap TypeMismatch $ genericDecodeAeson defaultOptionsWithNoAllNullaryToStringTag a
 instance encodeJsonInnerWithNoAllNullaryToStringTag :: EncodeJson InnerWithNoAllNullaryToStringTag where
   encodeJson a = genericEncodeAeson defaultOptionsWithNoAllNullaryToStringTag a
 
@@ -147,7 +149,7 @@ derive instance generic_InnerWithTagSingleConstructors :: Generic InnerWithTagSi
 instance show_InnerWithTagSingleConstructors :: Show InnerWithTagSingleConstructors where show = genericShow
 derive instance eq_InnerWithTagSingleConstructors :: Eq InnerWithTagSingleConstructors
 instance decodeJsonInnerWithTagSingleConstructors :: DecodeJson InnerWithTagSingleConstructors where
-  decodeJson a = genericDecodeAeson defaultOptionsWithTagSingleConstructors a
+  decodeJson a = lmap TypeMismatch $ genericDecodeAeson defaultOptionsWithTagSingleConstructors a
 instance encodeJsonInnerWithTagSingleConstructors :: EncodeJson InnerWithTagSingleConstructors where
   encodeJson a = genericEncodeAeson defaultOptionsWithTagSingleConstructors a
 

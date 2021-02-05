@@ -6,9 +6,10 @@ module Data.Argonaut.Aeson.Decode.Generic
   , genericDecodeAeson
   ) where
 
-import Prelude (Unit, bind, const, discard, identity, map, pure, show, unit, ($), (/=), (<$>), (<<<), (<>), (==), (>=>))
+import Partial.Unsafe
 
 import Control.Alt ((<|>))
+import Data.Argonaut (printJsonDecodeError)
 import Data.Argonaut.Aeson.Helpers (class AreAllConstructorsNullary, class IsSingleConstructor, Mode(..), areAllConstructorsNullary, isSingleConstructor)
 import Data.Argonaut.Aeson.Options (Options(Options), SumEncoding(..))
 import Data.Argonaut.Core (Json, caseJson, caseJsonArray, caseJsonString, fromArray, fromBoolean, fromNumber, fromObject, fromString, jsonNull, toObject, toString)
@@ -18,10 +19,10 @@ import Data.Bifunctor (lmap)
 import Data.Either (Either(..), note)
 import Data.Generic.Rep as Rep
 import Data.Maybe (Maybe(..))
-import Foreign.Object as Foreign
 import Data.Symbol (class IsSymbol, SProxy(..), reflectSymbol)
+import Foreign.Object as Foreign
+import Prelude (Unit, bind, const, discard, identity, map, pure, show, unit, ($), (/=), (<$>), (<<<), (<>), (==), (>=>))
 import Type.Proxy (Proxy(..))
-import Partial.Unsafe
 
 class DecodeAeson r where
   decodeAeson :: Options -> Json -> Either String r
@@ -122,7 +123,7 @@ instance decodeAesonConstructorProduct' :: (IsSymbol name, DecodeRepArgs a, Deco
         { mode: Mode {_Mode_ConstructorIsSingle: true}
         , options: Options {tagSingleConstructors: false}
         } -> do
-            {init, rest} <- (decodeRepArgs <<< caseJsonArray (singleton json) identity) json
+            {init, rest} <- lmap printJsonDecodeError $ (decodeRepArgs <<< caseJsonArray (singleton json) identity) json
             pure (Rep.Constructor init)
 
         { options: Options {sumEncoding: TaggedObject taggedObject}
@@ -131,9 +132,9 @@ instance decodeAesonConstructorProduct' :: (IsSymbol name, DecodeRepArgs a, Deco
           checkTag taggedObject.tagFieldName name objectJson
           {init, rest} <- case Foreign.lookup taggedObject.contentsFieldName objectJson of
             Just contents -> -- This must be an ordinary constructor.
-              (decodeRepArgs <<< toJsonArrayProduct) contents
+              lmap printJsonDecodeError $ (decodeRepArgs <<< toJsonArrayProduct) contents
             Nothing -> -- This must be a record constructor.
-              (decodeRepArgs <<< singleton <<< fromObject <<< Foreign.delete taggedObject.tagFieldName) objectJson
+              lmap printJsonDecodeError $ (decodeRepArgs <<< singleton <<< fromObject <<< Foreign.delete taggedObject.tagFieldName) objectJson
           pure (Rep.Constructor init)
 
 instance decodeAesonConstructor' :: (IsSymbol name, DecodeRepArgs (Rep.Argument a)) => DecodeAeson' (Rep.Constructor name (Rep.Argument a)) where
@@ -147,7 +148,7 @@ instance decodeAesonConstructor' :: (IsSymbol name, DecodeRepArgs (Rep.Argument 
         { mode: Mode {_Mode_ConstructorIsSingle: true}
         , options: Options {tagSingleConstructors: false}
         } -> do
-            {init, rest} <- (decodeRepArgs <<< caseJsonArray (singleton json) (singleton <<< fromArray)) json
+            {init, rest} <- lmap printJsonDecodeError $ (decodeRepArgs <<< caseJsonArray (singleton json) (singleton <<< fromArray)) json
             pure (Rep.Constructor init)
 
         _ -> decodeGeneralCase mode options json
@@ -162,9 +163,9 @@ decodeGeneralCase mode options json =
           checkTag taggedObject.tagFieldName name objectJson
           {init, rest} <- case Foreign.lookup taggedObject.contentsFieldName objectJson of
             Just contents -> -- This must be an ordinary constructor.
-              (decodeRepArgs <<< toJsonArray) contents
+              lmap printJsonDecodeError $ (decodeRepArgs <<< toJsonArray) contents
             Nothing -> -- This must be a record constructor.
-              (decodeRepArgs <<< singleton <<< fromObject <<< Foreign.delete taggedObject.tagFieldName) objectJson
+              lmap printJsonDecodeError $ (decodeRepArgs <<< singleton <<< fromObject <<< Foreign.delete taggedObject.tagFieldName) objectJson
           pure (Rep.Constructor init)
 
 -- | Decode `Json` Aeson representation of a value which has a `Generic` type.
